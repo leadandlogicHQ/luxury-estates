@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Property {
+  id          String    @id @default(cuid())
+  title       String
+  address     String
+  city        String
+  state       String
+  zip         String
+  price       Int
+  beds        Int
+  baths       Float
+  sqft        Int
+  status      String    @default("For Sale") // e.g., "For Sale", "Sold", "Pending"
+  type        String    // e.g., "Villa", "Penthouse"
+  built       Int
+  image       String    // Primary image URL
+  images      String[]  // Array of image URLs
+  description String    @db.Text
+  features    String[]  // Array of strings
+  lat         Float
+  lng         Float
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id])
+  inquiries   Inquiry[] // Back-relation for Inquiry
+  views       Int       @default(0) // For analytics
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Agent {
+  id         String     @id @default(cuid())
+  name       String
+  title      String
+  phone      String
+  email      String     @unique
+  photo      String
+  bio        String     @db.Text
+  properties Property[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Inquiry {
+  id         String    @id @default(cuid())
+  firstName  String
+  lastName   String
+  email      String
+  phone      String?
+  message    String
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+}
+
+model Subscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+}
