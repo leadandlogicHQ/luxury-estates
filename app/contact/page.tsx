@@ -115,7 +115,7 @@ export default async function ContactPage({
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-secondary/40 via-secondary/60 to-secondary/95" />
 
-        <div className="relative z-10 mx-auto flex min-h-[460px] max-w-7xl flex-col justify-between px-5 py-8 sm:px-8 lg:px-10">
+        <div className="relative z-10 mx-auto flex min-h-[460px] sm:min-h-[520px] max-w-7xl flex-col justify-between px-5 py-8 sm:px-8 lg:px-10">
           <nav
             aria-label="Breadcrumb"
             className="text-[0.63rem] font-semibold uppercase tracking-[0.2em] text-white/70"

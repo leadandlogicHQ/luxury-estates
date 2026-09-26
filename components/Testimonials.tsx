@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Quote, ArrowRight } from "lucide-react";
 import Reveal from "./Reveal";
+import Link from "next/link";
 
 const testimonials = [
   {
@@ -176,7 +177,7 @@ export default function Testimonials() {
               Looking for a more considered property experience? Explore the
               collection or speak with an advisor.
             </p>
-            <a
+            <Link
               href="/contact"
               className="group inline-flex w-fit items-center gap-2 text-sm font-bold uppercase tracking-[0.1em] text-white transition-colors hover:text-primary"
             >
@@ -185,7 +186,7 @@ export default function Testimonials() {
                 size={15}
                 className="text-primary transition-transform duration-200 group-hover:translate-x-1"
               />
-            </a>
+            </Link>
           </div>
         </Reveal>
       </div>

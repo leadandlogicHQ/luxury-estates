@@ -431,7 +431,7 @@ export default async function AboutPage() {
                     {/* FIX: Replaced `mt-5` with `mt-auto` to anchor footers bottom */}
                     <div className="mt-auto flex items-center gap-2 border-t border-border pt-4">
                       <a
-                        href="#"
+                        href="https://www.instagram.com"
                         aria-label={`${agent.name} on Instagram`}
                         className="flex h-9 w-9 items-center justify-center border border-border text-text-light transition-colors hover:border-primary hover:bg-primary/8 hover:text-primary-dark"
                       >
@@ -439,7 +439,7 @@ export default async function AboutPage() {
                       </a>
 
                       <a
-                        href="#"
+                        href="https://www.linkedin.com"
                         aria-label={`${agent.name} on LinkedIn`}
                         className="flex h-9 w-9 items-center justify-center border border-border text-text-light transition-colors hover:border-primary hover:bg-primary/8 hover:text-primary-dark"
                       >
