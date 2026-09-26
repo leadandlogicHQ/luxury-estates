@@ -1,8 +1,13 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { Search, DollarSign, BedDouble, ChevronDown, Check } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import type { ComponentType } from "react";
+import type {
+  ComponentType,
+  FormEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 
 interface SelectOption {
   value: string;
@@ -16,7 +21,7 @@ export default function HeroSearch() {
   const [maxPrice, setMaxPrice] = useState("");
   const [beds, setBeds] = useState("");
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (search) params.set("search", search);
@@ -34,10 +39,12 @@ export default function HeroSearch() {
     "w-full pl-10 pr-9 py-3 bg-white border border-border rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm text-text";
 
   return (
+    /* relative z-50 lifts the card's stacking context (created by backdrop-blur)
+       above the stats band, so open dropdowns are never covered */
     <form
       onSubmit={handleSearch}
       role="search"
-      className="bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-gold max-w-4xl mx-auto"
+      className="relative z-50 bg-white/95 backdrop-blur-sm p-4 rounded-lg shadow-gold max-w-4xl mx-auto"
     >
       <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
         {/* Text query */}
@@ -60,32 +67,32 @@ export default function HeroSearch() {
           />
         </div>
 
-        {/* Custom dropdowns */}
+        {/* Custom dropdowns — compact labels fit the narrow columns */}
         <LuxurySelect
           id="hero-min-price"
           ariaLabel="Minimum price"
           icon={DollarSign}
-          placeholder="Min Price"
+          placeholder="Min"
           value={minPrice}
           onChange={setMinPrice}
           options={[
-            { value: "500000", label: "$500,000" },
-            { value: "1000000", label: "$1,000,000" },
-            { value: "2000000", label: "$2,000,000" },
-            { value: "5000000", label: "$5,000,000" },
+            { value: "500000", label: "$500K" },
+            { value: "1000000", label: "$1M" },
+            { value: "2000000", label: "$2M" },
+            { value: "5000000", label: "$5M" },
           ]}
         />
         <LuxurySelect
           id="hero-max-price"
           ariaLabel="Maximum price"
           icon={DollarSign}
-          placeholder="Max Price"
+          placeholder="Max"
           value={maxPrice}
           onChange={setMaxPrice}
           options={[
-            { value: "2000000", label: "$2,000,000" },
-            { value: "5000000", label: "$5,000,000" },
-            { value: "10000000", label: "$10,000,000+" },
+            { value: "2000000", label: "$2M" },
+            { value: "5000000", label: "$5M" },
+            { value: "10000000", label: "$10M+" },
           ]}
         />
         <LuxurySelect
@@ -102,7 +109,6 @@ export default function HeroSearch() {
             { value: "4", label: "4+" },
           ]}
         />
-
         <button
           type="submit"
           className="bg-primary text-secondary font-bold rounded-md hover:bg-primary-dark transition-colors duration-300 flex items-center justify-center gap-2 px-6 py-3"
@@ -116,7 +122,7 @@ export default function HeroSearch() {
 
 /* ────────────────────────────────────────────────────────────
    Custom dropdown (combobox) — replaces native <select>
-   ──────────────────────────────────────────────────────────── */
+──────────────────────────────────────────────────────────── */
 interface LuxurySelectProps {
   id: string;
   ariaLabel: string;
@@ -142,7 +148,6 @@ function LuxurySelect({
   const generatedId = useId();
   const listboxId = `${generatedId}-listbox`;
   const optionId = (i: number) => `${generatedId}-option-${i}`;
-
   const selectedIndex = options.findIndex((o) => o.value === value);
   const current = selectedIndex >= 0 ? options[selectedIndex] : null;
 
@@ -175,7 +180,7 @@ function LuxurySelect({
     setOpen(false);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
     if (!open) {
       if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
         e.preventDefault();
@@ -239,7 +244,9 @@ function LuxurySelect({
           aria-hidden="true"
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary-dark"
         />
-        <span className={`block truncate ${current ? "text-text" : "text-text-light/70"}`}>
+        <span
+          className={`block truncate ${current ? "text-text" : "text-text-light/70"}`}
+        >
           {current ? current.label : placeholder}
         </span>
         <ChevronDown
@@ -250,12 +257,11 @@ function LuxurySelect({
           }`}
         />
       </button>
-
       <div
         id={listboxId}
         role="listbox"
         aria-label={ariaLabel}
-        className={`absolute left-0 right-0 top-[calc(100%+6px)] z-40 origin-top overflow-hidden rounded-md border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(23,23,23,0.12)] transition-all duration-150 ${
+        className={`absolute left-0 right-0 top-[calc(100%+6px)] z-40 max-h-64 origin-top overflow-y-auto rounded-md border border-border bg-white p-1.5 shadow-[0_18px_45px_rgba(23,23,23,0.12)] transition-all duration-150 ${
           open
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none -translate-y-1 scale-[0.98] opacity-0"
@@ -278,7 +284,9 @@ function LuxurySelect({
               } ${selected ? "font-semibold text-primary-dark" : "text-text"}`}
             >
               <span className="truncate">{opt.label}</span>
-              {selected && <Check size={14} className="shrink-0 text-primary-dark" aria-hidden="true" />}
+              {selected && (
+                <Check size={14} className="shrink-0 text-primary-dark" aria-hidden="true" />
+              )}
             </button>
           );
         })}
