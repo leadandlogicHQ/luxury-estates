@@ -1,21 +1,27 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
 import { resolveImage } from "@/lib/image";
+import type { Property } from "@prisma/client";
+
+/*
+ * CRITICAL: metadata image routes default to the Edge runtime, where the
+ * standard Prisma client (Node engine) cannot execute — that was the 500.
+ * Node runtime also lets ImageResponse render with the bundled wasm.
+ */
+export const runtime = "nodejs";
 
 export const alt = "Luxury Estate — featured residence";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/* Edge-safe ArrayBuffer → base64 helper. */
+/* ArrayBuffer → base64 helper (works on any runtime). */
 const toBase64 = (buf: ArrayBuffer) => {
   const bytes = new Uint8Array(buf);
   let binary = "";
   const chunk = 0x8000;
-
   for (let i = 0; i < bytes.length; i += chunk) {
     binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
-
   return btoa(binary);
 };
 
@@ -28,27 +34,29 @@ export default async function PropertyOgImage({
 }) {
   const { id } = await params;
 
-  const property = await prisma.property.findUnique({
-    where: { id },
-  });
+  /* Crash-proof: a DB hiccup degrades to the brand-only card, never a 500 */
+  let property: Property | null = null;
+  try {
+    property = await prisma.property.findUnique({ where: { id } });
+  } catch {
+    property = null;
+  }
 
   const siteUrl = (
     process.env.NEXT_PUBLIC_SITE_URL ||
     "https://luxury-estates-rho.vercel.app"
   ).replace(/\/$/, "");
 
+  /* Photo is optional — the card still renders beautifully without it */
   let photo: string | null = null;
-
   if (property?.image) {
     try {
       const imageUrl = property.image.startsWith("http")
         ? property.image
         : `${siteUrl}${resolveImage(property.image)}`;
-
       const response = await fetch(imageUrl, {
         next: { revalidate: 86400 },
       });
-
       if (response.ok) {
         const type = response.headers.get("content-type") || "image/jpeg";
         photo = `data:${type};base64,${toBase64(await response.arrayBuffer())}`;
@@ -98,7 +106,6 @@ export default async function PropertyOgImage({
                 objectFit: "cover",
               }}
             />
-
             <div
               style={{
                 position: "absolute",
@@ -108,7 +115,6 @@ export default async function PropertyOgImage({
                   "linear-gradient(90deg, rgba(23,23,23,0.02) 58%, rgba(23,23,23,0.34) 100%)",
               }}
             />
-
             <div
               style={{
                 position: "absolute",
@@ -142,13 +148,7 @@ export default async function PropertyOgImage({
               justifyContent: "space-between",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div
                 style={{
                   display: "flex",
@@ -166,14 +166,7 @@ export default async function PropertyOgImage({
               >
                 LE
               </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 3,
-                }}
-              >
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 <span
                   style={{
                     color: "#E5D2A6",
@@ -195,15 +188,7 @@ export default async function PropertyOgImage({
                 </span>
               </div>
             </div>
-
-            <div
-              style={{
-                display: "flex",
-                width: 46,
-                height: 1,
-                background: "#8A6B2A",
-              }}
-            />
+            <div style={{ display: "flex", width: 46, height: 1, background: "#8A6B2A" }} />
           </div>
 
           {/* PROPERTY IDENTITY */}
@@ -215,13 +200,7 @@ export default async function PropertyOgImage({
               marginTop: 12,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div
                 style={{
                   display: "flex",
@@ -242,7 +221,6 @@ export default async function PropertyOgImage({
                 {status}
               </span>
             </div>
-
             <span
               style={{
                 marginTop: 18,
@@ -255,7 +233,6 @@ export default async function PropertyOgImage({
             >
               {title}
             </span>
-
             <span
               style={{
                 marginTop: 12,
@@ -269,13 +246,7 @@ export default async function PropertyOgImage({
           </div>
 
           {/* DECISION BLOCK */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {property ? (
               <>
                 <div
@@ -288,13 +259,7 @@ export default async function PropertyOgImage({
                     borderTop: "1px solid #3A3835",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 5,
-                    }}
-                  >
+                  <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                     <span
                       style={{
                         color: "#746D64",
@@ -305,7 +270,6 @@ export default async function PropertyOgImage({
                     >
                       OFFERED AT
                     </span>
-
                     <span
                       style={{
                         color: "#C8A45D",
@@ -317,7 +281,6 @@ export default async function PropertyOgImage({
                       {formatPrice(property.price)}
                     </span>
                   </div>
-
                   <span
                     style={{
                       color: "#C9C4BC",
@@ -327,12 +290,9 @@ export default async function PropertyOgImage({
                       whiteSpace: "pre-line",
                     }}
                   >
-                    {`${property.beds} bd · ${property.baths} ba\n${property.sqft.toLocaleString(
-                      "en-US",
-                    )} sqft`}
+                    {`${property.beds} bd · ${property.baths} ba\n${property.sqft.toLocaleString("en-US")} sqft`}
                   </span>
                 </div>
-
                 <div
                   style={{
                     display: "flex",
@@ -345,12 +305,7 @@ export default async function PropertyOgImage({
                   }}
                 >
                   <span
-                    style={{
-                      display: "flex",
-                      width: 28,
-                      height: 1,
-                      background: "#C8A45D",
-                    }}
+                    style={{ display: "flex", width: 28, height: 1, background: "#C8A45D" }}
                   />
                   PRIVATE PROPERTY COLLECTION
                 </div>
