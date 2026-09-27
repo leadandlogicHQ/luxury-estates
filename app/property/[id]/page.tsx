@@ -39,11 +39,6 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
   return {
     title: `${property.title} | Luxury Estates`,
     description: `${property.title} — ${formatCurrency(property.price)}. ${property.beds} bed, ${property.baths} bath luxury ${property.type.toLowerCase()} in ${property.city}, ${property.state}.`,
-    openGraph: {
-      title: property.title,
-      description: property.description.slice(0, 160),
-      images: [resolveImage(property.image)],
-    },
   };
 }
 

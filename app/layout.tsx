@@ -13,9 +13,22 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat", display: "swap" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  ),
   title: "Luxury Estates | Find Your Dream Home",
-  description: "Discover exceptional luxury properties in the world's most desirable locations.",
+  description:
+    "Discover exceptional luxury properties in the world's most desirable locations.",
+  openGraph: {
+    type: "website",
+    siteName: "Luxury Estates",
+    url: "/",
+    /* og:image is injected automatically by app/opengraph-image.png —
+       do NOT list images here or you'll emit duplicate tags */
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
